@@ -166,11 +166,9 @@ test('wo-spike: _validateUpdateThing keeps auto-closed REGISTER/MOVE WOs editabl
     mov: { id: 'mov', info: { status: WORK_ORDER_STATUSES.CLOSED, type: WORK_ORDER_TYPES.MOVE } },
     micro: { id: 'micro', info: { status: WORK_ORDER_STATUSES.CLOSED, type: WORK_ORDER_TYPES.MICROBT_MINER } }
   }
-  // Register/Move stay editable after their automatic close
   r._validateUpdateThing({ id: 'reg', info: { assignedTo: 'u1' } })
   r._validateUpdateThing({ id: 'mov', info: { deviceModel: 'X' } })
   t.pass('register/move editable after auto-close')
-  // MicroBT repair WOs remain locked once terminal
   t.exception(() => r._validateUpdateThing({ id: 'micro', info: { issue: 'x' } }), /ERR_WO_INVALID_STATUS_TRANSITION/)
 })
 

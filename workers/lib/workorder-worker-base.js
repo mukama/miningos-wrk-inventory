@@ -142,7 +142,6 @@ class WrkWorkOrderRack extends WrkInventoryRack {
     const currentStatus = current.info?.status
     const nextStatus = data.info?.status
 
-    // Register/Move WOs auto-close on creation but stay editable afterward.
     const editableTerminal = current.info?.type === WORK_ORDER_TYPES.REGISTER || current.info?.type === WORK_ORDER_TYPES.MOVE
     if (WORK_ORDER_TERMINAL_STATUSES.has(currentStatus) && !editableTerminal) {
       throw new Error('ERR_WO_INVALID_STATUS_TRANSITION')
