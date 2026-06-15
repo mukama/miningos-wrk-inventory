@@ -82,9 +82,9 @@ test('wo-spike: _validateRegisterThing rejects bad type / missing fields and fil
   t.exception(() => r._validateRegisterThing({}), /ERR_THING_VALIDATE_INFO_INVALID/)
   t.exception(() => r._validateRegisterThing({ info: { type: 99 } }), /ERR_WO_TYPE_INVALID/)
   t.exception(() => r._validateRegisterThing({ info: { type: 2, deviceType: 'cooling', deviceModel: 'm', deviceIdentifier: 'd' } }), /ERR_WO_DEVICE_TYPE_INVALID/)
-  t.exception(() => r._validateRegisterThing({ info: { type: 2, deviceType: 'miner', deviceModel: 'm', deviceIdentifier: 'd' } }), /ERR_WO_ISSUE_INVALID/)
+  t.exception(() => r._validateRegisterThing({ info: { type: 3, deviceType: 'miner', deviceModel: 'm', deviceIdentifier: 'd' } }), /ERR_WO_ISSUE_INVALID/)
 
-  const valid = { info: { type: 2, deviceType: 'miner', deviceModel: 'm', deviceIdentifier: 'd', issue: 'i' } }
+  const valid = { info: { type: 3, deviceType: 'miner', deviceModel: 'm', deviceIdentifier: 'd', issue: 'i' } }
   r._validateRegisterThing(valid)
   t.is(valid.info.status, WORK_ORDER_STATUSES.OPEN)
   t.is(valid.info.assignedTo, null)

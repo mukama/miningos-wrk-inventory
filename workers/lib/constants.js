@@ -20,7 +20,9 @@ const WORK_ORDER_THING_TYPE = 'work_order'
 
 const WORK_ORDER_TYPES = {
   REGISTER: 1,
-  REGULAR: 2
+  MOVE: 2,
+  MICROBT_MINER: 3,
+  MICROBT_NON_MINER: 4
 }
 
 const WORK_ORDER_STATUSES = {

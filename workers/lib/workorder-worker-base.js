@@ -120,7 +120,7 @@ class WrkWorkOrderRack extends WrkInventoryRack {
     if (!data.info.deviceIdentifier || typeof data.info.deviceIdentifier !== 'string') {
       throw new Error('ERR_WO_DEVICE_IDENTIFIER_INVALID')
     }
-    if (data.info.type === WORK_ORDER_TYPES.REGULAR) {
+    if (data.info.type === WORK_ORDER_TYPES.MICROBT_MINER || data.info.type === WORK_ORDER_TYPES.MICROBT_NON_MINER) {
       if (!data.info.issue || typeof data.info.issue !== 'string') {
         throw new Error('ERR_WO_ISSUE_INVALID')
       }
