@@ -51,7 +51,7 @@ const WORK_ORDER_DEFAULT_PREFIX = 'IVI'
 
 const WORK_ORDER_VALID_DEVICE_TYPES = ['miner', 'psu', 'hashboard', 'controller']
 
-const MINER_LOCATIONS = ['Site Warehouse', 'Site Lab', 'Miner Room', 'Vendor', 'Scrapped', 'Disposed']
+const MINER_LOCATIONS = ['Site Warehouse', 'Site Lab', 'Miner Room', 'Vendor', 'ACME Container', 'Scrapped', 'Disposed']
 
 const SPARE_PART_INITIAL_LOCATION = 'Site Warehouse'
 
