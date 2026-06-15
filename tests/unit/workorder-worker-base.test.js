@@ -2,7 +2,7 @@
 
 const test = require('brittle')
 const WrkWorkOrderRack = require('../../workers/lib/workorder-worker-base')
-const { WORK_ORDER_STATUSES } = require('../../workers/lib/constants')
+const { WORK_ORDER_STATUSES, WORK_ORDER_TYPES } = require('../../workers/lib/constants')
 
 class MockBee {
   constructor () {
@@ -96,7 +96,8 @@ test('wo-spike: _validateRegisterThing — Type 1 does not require issue', (t) =
   const r = newRack()
   const valid = { info: { type: 1, deviceType: 'psu', deviceModel: 'PSU-1', deviceIdentifier: 'SN-1' } }
   r._validateRegisterThing(valid)
-  t.is(valid.info.status, WORK_ORDER_STATUSES.OPEN)
+  t.is(valid.info.status, WORK_ORDER_STATUSES.CLOSED)
+  t.ok(valid.info.closedAt, 'register WO auto-closes on creation')
   t.alike(valid.info.partsMoves, [])
 })
 
@@ -149,6 +150,21 @@ test('wo-spike: _validateUpdateThing enforces transitions and terminal-state gua
 
   // unknown id
   t.exception(() => r._validateUpdateThing({ id: 'nope', info: {} }), /ERR_THING_NOTFOUND/)
+})
+
+test('wo-spike: _validateUpdateThing keeps auto-closed REGISTER/MOVE WOs editable', (t) => {
+  const r = newRack()
+  r.mem.things = {
+    reg: { id: 'reg', info: { status: WORK_ORDER_STATUSES.CLOSED, type: WORK_ORDER_TYPES.REGISTER } },
+    mov: { id: 'mov', info: { status: WORK_ORDER_STATUSES.CLOSED, type: WORK_ORDER_TYPES.MOVE } },
+    micro: { id: 'micro', info: { status: WORK_ORDER_STATUSES.CLOSED, type: WORK_ORDER_TYPES.MICROBT_MINER } }
+  }
+  // Register/Move stay editable after their automatic close
+  r._validateUpdateThing({ id: 'reg', info: { assignedTo: 'u1' } })
+  r._validateUpdateThing({ id: 'mov', info: { deviceModel: 'X' } })
+  t.pass('register/move editable after auto-close')
+  // MicroBT repair WOs remain locked once terminal
+  t.exception(() => r._validateUpdateThing({ id: 'micro', info: { issue: 'x' } }), /ERR_WO_INVALID_STATUS_TRANSITION/)
 })
 
 test('wo-spike: _validateUpdateThing validates warranty when provided', (t) => {
