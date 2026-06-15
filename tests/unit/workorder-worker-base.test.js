@@ -110,6 +110,13 @@ test('wo-spike: _validateRegisterThing — Type 1 preserves caller-supplied part
   t.is(valid.info.partsMoves[0].partId, 'p1')
 })
 
+test('wo-spike: _validateRegisterThing preserves caller-supplied remarks', (t) => {
+  const r = newRack()
+  const valid = { info: { type: 1, deviceType: 'psu', deviceModel: 'PSU-1', deviceIdentifier: 'SN-1', remarks: 'handle with care' } }
+  r._validateRegisterThing(valid)
+  t.is(valid.info.remarks, 'handle with care')
+})
+
 test('wo-spike: _validateRegisterThing rejects invalid warranty payload', (t) => {
   const r = newRack()
   const base = { type: 1, deviceType: 'psu', deviceModel: 'PSU-1', deviceIdentifier: 'SN-1' }
