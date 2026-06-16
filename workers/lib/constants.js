@@ -20,7 +20,9 @@ const WORK_ORDER_THING_TYPE = 'work_order'
 
 const WORK_ORDER_TYPES = {
   REGISTER: 1,
-  REGULAR: 2
+  MOVE: 2,
+  MICROBT_MINER: 3,
+  MICROBT_NON_MINER: 4
 }
 
 const WORK_ORDER_STATUSES = {
@@ -51,9 +53,9 @@ const WORK_ORDER_DEFAULT_PREFIX = 'IVI'
 
 const WORK_ORDER_VALID_DEVICE_TYPES = ['miner', 'psu', 'hashboard', 'controller']
 
-const MINER_LOCATIONS = ['Site Warehouse', 'Site Lab', 'Miner Room', 'Vendor', 'Scrapped', 'Disposed']
+const MINER_LOCATIONS = ['workshop.warehouse', 'workshop.lab', 'site.warehouse', 'site.lab', 'site.container', 'miner.room', 'vendor', 'acme.container', 'scrapped', 'disposed', 'unknown']
 
-const SPARE_PART_INITIAL_LOCATION = 'Site Warehouse'
+const SPARE_PART_INITIAL_LOCATION = 'site.warehouse'
 
 const WORK_ORDER_FILE_MAX_BYTES_DEFAULT = 10 * 1024 * 1024
 const WORK_ORDER_FILE_MIME_ALLOWLIST_DEFAULT = [

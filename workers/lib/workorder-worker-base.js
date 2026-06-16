@@ -120,12 +120,14 @@ class WrkWorkOrderRack extends WrkInventoryRack {
     if (!data.info.deviceIdentifier || typeof data.info.deviceIdentifier !== 'string') {
       throw new Error('ERR_WO_DEVICE_IDENTIFIER_INVALID')
     }
-    if (data.info.type === WORK_ORDER_TYPES.REGULAR) {
+    if (data.info.type === WORK_ORDER_TYPES.MICROBT_MINER || data.info.type === WORK_ORDER_TYPES.MICROBT_NON_MINER) {
       if (!data.info.issue || typeof data.info.issue !== 'string') {
         throw new Error('ERR_WO_ISSUE_INVALID')
       }
     }
-    data.info.status = data.info.status || WORK_ORDER_STATUSES.OPEN
+    const autoClose = data.info.type === WORK_ORDER_TYPES.REGISTER || data.info.type === WORK_ORDER_TYPES.MOVE
+    data.info.status = data.info.status || (autoClose ? WORK_ORDER_STATUSES.CLOSED : WORK_ORDER_STATUSES.OPEN)
+    if (data.info.status === WORK_ORDER_STATUSES.CLOSED) data.info.closedAt = data.info.closedAt ?? Date.now()
     data.info.assignedTo = data.info.assignedTo ?? null
     data.info.finalResult = data.info.finalResult ?? null
     data.info.warranty = data.info.warranty ?? null
@@ -140,7 +142,8 @@ class WrkWorkOrderRack extends WrkInventoryRack {
     const currentStatus = current.info?.status
     const nextStatus = data.info?.status
 
-    if (WORK_ORDER_TERMINAL_STATUSES.has(currentStatus)) {
+    const editableTerminal = current.info?.type === WORK_ORDER_TYPES.REGISTER || current.info?.type === WORK_ORDER_TYPES.MOVE
+    if (WORK_ORDER_TERMINAL_STATUSES.has(currentStatus) && !editableTerminal) {
       throw new Error('ERR_WO_INVALID_STATUS_TRANSITION')
     }
 

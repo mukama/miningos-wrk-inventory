@@ -2,7 +2,7 @@
 
 const test = require('brittle')
 const WrkWorkOrderRack = require('../../workers/lib/workorder-worker-base')
-const { WORK_ORDER_STATUSES } = require('../../workers/lib/constants')
+const { WORK_ORDER_STATUSES, WORK_ORDER_TYPES } = require('../../workers/lib/constants')
 
 class MockBee {
   constructor () {
@@ -82,9 +82,9 @@ test('wo-spike: _validateRegisterThing rejects bad type / missing fields and fil
   t.exception(() => r._validateRegisterThing({}), /ERR_THING_VALIDATE_INFO_INVALID/)
   t.exception(() => r._validateRegisterThing({ info: { type: 99 } }), /ERR_WO_TYPE_INVALID/)
   t.exception(() => r._validateRegisterThing({ info: { type: 2, deviceType: 'cooling', deviceModel: 'm', deviceIdentifier: 'd' } }), /ERR_WO_DEVICE_TYPE_INVALID/)
-  t.exception(() => r._validateRegisterThing({ info: { type: 2, deviceType: 'miner', deviceModel: 'm', deviceIdentifier: 'd' } }), /ERR_WO_ISSUE_INVALID/)
+  t.exception(() => r._validateRegisterThing({ info: { type: 3, deviceType: 'miner', deviceModel: 'm', deviceIdentifier: 'd' } }), /ERR_WO_ISSUE_INVALID/)
 
-  const valid = { info: { type: 2, deviceType: 'miner', deviceModel: 'm', deviceIdentifier: 'd', issue: 'i' } }
+  const valid = { info: { type: 3, deviceType: 'miner', deviceModel: 'm', deviceIdentifier: 'd', issue: 'i' } }
   r._validateRegisterThing(valid)
   t.is(valid.info.status, WORK_ORDER_STATUSES.OPEN)
   t.is(valid.info.assignedTo, null)
@@ -96,17 +96,25 @@ test('wo-spike: _validateRegisterThing — Type 1 does not require issue', (t) =
   const r = newRack()
   const valid = { info: { type: 1, deviceType: 'psu', deviceModel: 'PSU-1', deviceIdentifier: 'SN-1' } }
   r._validateRegisterThing(valid)
-  t.is(valid.info.status, WORK_ORDER_STATUSES.OPEN)
+  t.is(valid.info.status, WORK_ORDER_STATUSES.CLOSED)
+  t.ok(valid.info.closedAt, 'register WO auto-closes on creation')
   t.alike(valid.info.partsMoves, [])
 })
 
 test('wo-spike: _validateRegisterThing — Type 1 preserves caller-supplied partsMoves', (t) => {
   const r = newRack()
-  const entry = { partId: 'p1', fromLocation: null, toLocation: 'Site Warehouse' }
+  const entry = { partId: 'p1', fromLocation: null, toLocation: 'site.warehouse' }
   const valid = { info: { type: 1, deviceType: 'psu', deviceModel: 'PSU-1', deviceIdentifier: 'SN-1', partsMoves: [entry] } }
   r._validateRegisterThing(valid)
   t.is(valid.info.partsMoves.length, 1)
   t.is(valid.info.partsMoves[0].partId, 'p1')
+})
+
+test('wo-spike: _validateRegisterThing preserves caller-supplied remarks', (t) => {
+  const r = newRack()
+  const valid = { info: { type: 1, deviceType: 'psu', deviceModel: 'PSU-1', deviceIdentifier: 'SN-1', remarks: 'handle with care' } }
+  r._validateRegisterThing(valid)
+  t.is(valid.info.remarks, 'handle with care')
 })
 
 test('wo-spike: _validateRegisterThing rejects invalid warranty payload', (t) => {
@@ -149,6 +157,19 @@ test('wo-spike: _validateUpdateThing enforces transitions and terminal-state gua
 
   // unknown id
   t.exception(() => r._validateUpdateThing({ id: 'nope', info: {} }), /ERR_THING_NOTFOUND/)
+})
+
+test('wo-spike: _validateUpdateThing keeps auto-closed REGISTER/MOVE WOs editable', (t) => {
+  const r = newRack()
+  r.mem.things = {
+    reg: { id: 'reg', info: { status: WORK_ORDER_STATUSES.CLOSED, type: WORK_ORDER_TYPES.REGISTER } },
+    mov: { id: 'mov', info: { status: WORK_ORDER_STATUSES.CLOSED, type: WORK_ORDER_TYPES.MOVE } },
+    micro: { id: 'micro', info: { status: WORK_ORDER_STATUSES.CLOSED, type: WORK_ORDER_TYPES.MICROBT_MINER } }
+  }
+  r._validateUpdateThing({ id: 'reg', info: { assignedTo: 'u1' } })
+  r._validateUpdateThing({ id: 'mov', info: { deviceModel: 'X' } })
+  t.pass('register/move editable after auto-close')
+  t.exception(() => r._validateUpdateThing({ id: 'micro', info: { issue: 'x' } }), /ERR_WO_INVALID_STATUS_TRANSITION/)
 })
 
 test('wo-spike: _validateUpdateThing validates warranty when provided', (t) => {
