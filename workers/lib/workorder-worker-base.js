@@ -143,7 +143,8 @@ class WrkWorkOrderRack extends WrkInventoryRack {
     const nextStatus = data.info?.status
 
     const editableTerminal = current.info?.type === WORK_ORDER_TYPES.REGISTER || current.info?.type === WORK_ORDER_TYPES.MOVE
-    if (WORK_ORDER_TERMINAL_STATUSES.has(currentStatus) && !editableTerminal) {
+    const reopening = nextStatus != null && Boolean(WORK_ORDER_VALID_TRANSITIONS[currentStatus]?.has(nextStatus))
+    if (WORK_ORDER_TERMINAL_STATUSES.has(currentStatus) && !editableTerminal && !reopening) {
       throw new Error('ERR_WO_INVALID_STATUS_TRANSITION')
     }
 

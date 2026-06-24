@@ -148,12 +148,16 @@ test('wo-spike: _validateUpdateThing enforces transitions and terminal-state gua
   // open → 'bogus': bad
   t.exception(() => r._validateUpdateThing({ id: 'open', info: { status: 'bogus' } }), /ERR_WO_INVALID_STATUS_TRANSITION/)
 
-  // closed → anything: invalid transition
+  // closed → open: ok (reopen)
+  r._validateUpdateThing({ id: 'closed', info: { status: WORK_ORDER_STATUSES.OPEN } })
+  // closed → non-status edit: still frozen
   t.exception(() => r._validateUpdateThing({ id: 'closed', info: { issue: 'x' } }), /ERR_WO_INVALID_STATUS_TRANSITION/)
-  t.exception(() => r._validateUpdateThing({ id: 'closed', info: { status: WORK_ORDER_STATUSES.OPEN } }), /ERR_WO_INVALID_STATUS_TRANSITION/)
+  // closed → cancelled: only reopen (→ open) leaves the closed state
+  t.exception(() => r._validateUpdateThing({ id: 'closed', info: { status: WORK_ORDER_STATUSES.CANCELLED } }), /ERR_WO_INVALID_STATUS_TRANSITION/)
 
-  // cancelled → anything: invalid transition
+  // cancelled → anything: still terminal (cancellation is not reopenable)
   t.exception(() => r._validateUpdateThing({ id: 'cancelled', info: { status: WORK_ORDER_STATUSES.CLOSED } }), /ERR_WO_INVALID_STATUS_TRANSITION/)
+  t.exception(() => r._validateUpdateThing({ id: 'cancelled', info: { status: WORK_ORDER_STATUSES.OPEN } }), /ERR_WO_INVALID_STATUS_TRANSITION/)
 
   // unknown id
   t.exception(() => r._validateUpdateThing({ id: 'nope', info: {} }), /ERR_THING_NOTFOUND/)
@@ -170,6 +174,18 @@ test('wo-spike: _validateUpdateThing keeps auto-closed REGISTER/MOVE WOs editabl
   r._validateUpdateThing({ id: 'mov', info: { deviceModel: 'X' } })
   t.pass('register/move editable after auto-close')
   t.exception(() => r._validateUpdateThing({ id: 'micro', info: { issue: 'x' } }), /ERR_WO_INVALID_STATUS_TRANSITION/)
+})
+
+test('wo-spike: _validateUpdateThing allows reopening a closed WO of any type (closed → open)', (t) => {
+  const r = newRack()
+  r.mem.things = {
+    micro: { id: 'micro', info: { status: WORK_ORDER_STATUSES.CLOSED, type: WORK_ORDER_TYPES.MICROBT_MINER } },
+    mov: { id: 'mov', info: { status: WORK_ORDER_STATUSES.CLOSED, type: WORK_ORDER_TYPES.MOVE } }
+  }
+  // reopen leaves the closed state even for non-editable terminal types
+  r._validateUpdateThing({ id: 'micro', info: { status: WORK_ORDER_STATUSES.OPEN } })
+  r._validateUpdateThing({ id: 'mov', info: { status: WORK_ORDER_STATUSES.OPEN } })
+  t.pass('closed WOs can be reopened regardless of type')
 })
 
 test('wo-spike: _validateUpdateThing validates warranty when provided', (t) => {
